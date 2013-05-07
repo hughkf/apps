@@ -56,17 +56,17 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.num_dim = num_dim
 
     # Lower and upper edge of computational domain:
-    clawdata.lower[0] = 
-    clawdata.upper[0] = 2.0
+    clawdata.lower[0] = 0.0
+    clawdata.upper[0] = 35e3
 
-    clawdata.lower[1] = -2.0
-    clawdata.upper[1] = 2.0
+    clawdata.lower[1] = 0.0
+    clawdata.upper[1] = 48.e3
 
 
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = 41
-    clawdata.num_cells[1] = 41
+    clawdata.num_cells[0] = 35
+    clawdata.num_cells[1] = 48
 
 
     # ---------------
@@ -113,8 +113,8 @@ def setrun(claw_pkg='geoclaw'):
 
     if clawdata.output_style == 1:
         # Output nout frames at equally spaced times up to tfinal:
-        clawdata.num_output_times = 16
-        clawdata.tfinal = 4.4857014654663745
+        clawdata.num_output_times = 20
+        clawdata.tfinal = 100
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -347,7 +347,7 @@ def setgeo(rundata):
     geodata.coriolis_forcing = False
 
     # == Algorithm and Initial Conditions ==
-    geodata.sea_level = -10.0
+    geodata.sea_level = 0.0
     geodata.dry_tolerance = 1.e-3
     geodata.wave_tolerance = 1.e-2
     geodata.deep_depth = 1e2
@@ -357,10 +357,17 @@ def setgeo(rundata):
     geodata.friction_depth = 1.e6
 
     # == settopo.data values ==
+    geodata.test_topography = 3
+    geodata.x0 = 35.0
+    geodata.x1 = 7.0
+    geodata.x2 = -1.0
+    geodata.basin_depth = 28.0 + 6.0
+    geodata.shelf_depth = 6.0
+    geodata.beach_slope = 0.0
     geodata.topofiles = []
     # for topography, append lines of the form
     #    [topotype, minlevel, maxlevel, t1, t2, fname]
-    geodata.topofiles.append([2, 1, 10, 0., 1.e10, 'venice.tt2'])
+    # geodata.topofiles.append([2, 1, 10, 0., 1.e10, 'venice.tt2'])
 
     # == setdtopo.data values ==
     geodata.dtopofiles = []

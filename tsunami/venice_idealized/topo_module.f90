@@ -471,8 +471,17 @@ contains
             else
                 topography = topo_beach_slope * (x-topo_x2) + topo_shelf_depth
             endif
-        else if (test_topography == 4) then
-            stop "Test topography 4 has not been implemented!"
+        else if (test_topography == 3) then
+            if (x > topo_x0) then
+                topography = topo_basin_depth
+            else if (topo_x0 >= x .and. x > topo_x1) then
+                topography = topo_shelf_slope * (x-topo_x0) + topo_basin_depth
+            else if (topo_x1 >= x .and. x > topo_x2) then
+                topography = topo_shelf_depth
+            else
+                topography = topo_beach_slope * (x-topo_x2) + topo_shelf_depth
+            endif
+
         endif
         
     end function analytic_topography
