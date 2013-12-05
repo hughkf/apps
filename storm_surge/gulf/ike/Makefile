@@ -52,6 +52,7 @@ SOURCES = \
   $(GEOLIB)/surge/src2.f90 \
   $(GEOLIB)/surge/src1d.f90 \
   $(GEOLIB)/surge/setaux.f90 \
+  $(GEOLIB)/surge/setauxcopy.f90 \
   $(GEOLIB)/surge/setprob.f90 \
   $(GEOLIB)/surge/flag2refine2.f90 \
   $(GEOLIB)/surge/b4step2.f90 \
@@ -162,6 +163,7 @@ SOURCES = \
   $(AMRLIB)/intcopy.f \
   $(AMRLIB)/preintcopy.f \
   $(AMRLIB)/icall.f \
+  $(AMRLIB)/icallcopy.f \
   $(AMRLIB)/preicall.f \
   $(AMRLIB)/inlinelimiter.f \
   $(AMRLIB)/cstore.f \

@@ -121,11 +121,10 @@ def setrun(claw_pkg='geoclaw'):
     # The solution at initial time t0 is always written in addition.
 
     clawdata.output_style = 1
+    clawdata.tfinal = days2seconds(ike_landfall.days + 0.75) + ike_landfall.seconds
 
-    if clawdata.output_style==1:
+    if clawdata.output_style == 1:
         # Output nout frames at equally spaced times up to tfinal:
-        # clawdata.tfinal = days2seconds(date2days('2008091400'))
-        clawdata.tfinal = days2seconds(ike_landfall.days + 0.75) + ike_landfall.seconds
         recurrence = 24
         clawdata.num_output_times = int((clawdata.tfinal - clawdata.t0) 
                                             * recurrence / (60**2 * 24))
@@ -140,7 +139,7 @@ def setrun(claw_pkg='geoclaw'):
     elif clawdata.output_style == 3:
         # Output every iout timesteps with a total of ntot time steps:
         clawdata.output_step_interval = 1
-        clawdata.total_steps = 1
+        clawdata.total_steps = 5
         clawdata.output_t0 = True
         
 
@@ -376,21 +375,16 @@ def setrun(claw_pkg='geoclaw'):
 
     # == setgauges.data values ==
     # for gauges append lines of the form  [gaugeno, x, y, t1, t2]
-    # rundata.gaugedata.gauges.append([121, -94.70895, 29.2812, rundata.clawdata.t0, rundata.clawdata.tfinal])  
-    # rundata.gaugedata.gauges.append([122, -94.38840, 29.4964, rundata.clawdata.t0, rundata.clawdata.tfinal])    
-    # rundata.gaugedata.gauges.append([123, -94.12530, 29.5846, rundata.clawdata.t0, rundata.clawdata.tfinal]) 
 
     # Gauges from Ike AWR paper (2011 Dawson et al)
+    # Station W:
     rundata.gaugedata.gauges.append([1, -95.04, 29.07, rundata.clawdata.t0, rundata.clawdata.tfinal])
+    # Station X:
     rundata.gaugedata.gauges.append([2, -94.71, 29.28, rundata.clawdata.t0, rundata.clawdata.tfinal])
+    # Station Y:
     rundata.gaugedata.gauges.append([3, -94.39, 29.49, rundata.clawdata.t0, rundata.clawdata.tfinal])
+    # Station Z:
     rundata.gaugedata.gauges.append([4, -94.13, 29.58, rundata.clawdata.t0, rundata.clawdata.tfinal])
-    # rundata.gaugedata.gauges.append([5, -95.00, 29.70, rundata.clawdata.t0, rundata.clawdata.tfinal])
-    # rundata.gaugedata.gauges.append([6, -95.14, 29.74, rundata.clawdata.t0, rundata.clawdata.tfinal])
-    # rundata.gaugedata.gauges.append([7, -95.08, 29.55, rundata.clawdata.t0, rundata.clawdata.tfinal])
-    # rundata.gaugedata.gauges.append([8, -94.75, 29.76, rundata.clawdata.t0, rundata.clawdata.tfinal])
-    # rundata.gaugedata.gauges.append([9, -95.27, 29.72, rundata.clawdata.t0, rundata.clawdata.tfinal])
-    # rundata.gaugedata.gauges.append([10, -94.51, 29.52, rundata.clawdata.t0, rundata.clawdata.tfinal])
     
     # Stations from Andrew Kennedy
     # Station R - 82
@@ -401,14 +395,6 @@ def setrun(claw_pkg='geoclaw'):
     rundata.gaugedata.gauges.append([ord('U'),-95.75235, 28.62505, rundata.clawdata.t0, rundata.clawdata.tfinal])
     # Station V - 86
     rundata.gaugedata.gauges.append([ord('V'),-95.31511666666667, 28.8704, rundata.clawdata.t0, rundata.clawdata.tfinal])
-    # Station W: Same as gauge 1
-    # rundata.gaugedata.gauges.append([ord('W'),-95.03958333333334, 29.0714, rundata.clawdata.t0, rundata.clawdata.tfinal])
-    # Station X: Same as gauge 2 above
-    # rundata.gaugedata.gauges.append([ord('X'),-94.70895, 29.281266666666667, rundata.clawdata.t0, rundata.clawdata.tfinal])
-    # Station Y: Same as gauge 3 above
-    # rundata.gaugedata.gauges.append([ord('Y'),-94.3884, 29.496433333333332, rundata.clawdata.t0, rundata.clawdata.tfinal])
-    # Station Z: Same as gauge 4 above
-    # rundata.gaugedata.gauges.append([ord('Z'),-94.12533333333333, 29.584683333333334, rundata.clawdata.t0, rundata.clawdata.tfinal])
 
     #------------------------------------------------------------------
     # GeoClaw specific parameters:
@@ -471,8 +457,8 @@ def setgeo(rundata):
                               '../bathy/gulf_caribbean.tt3'])
     topo_data.topofiles.append([3, 1, 5, rundata.clawdata.t0, rundata.clawdata.tfinal,
                               '../bathy/NOAA_Galveston_Houston.tt3'])
-    topo_data.topofiles.append([3, 1, 6, rundata.clawdata.t0, rundata.clawdata.tfinal,
-                              '../bathy/galveston_tx.asc'])
+    # topo_data.topofiles.append([3, 1, 6, rundata.clawdata.t0, rundata.clawdata.tfinal,
+    #                           '../bathy/galveston_tx.asc'])
     # geodata.topofiles.append([3, 1, 7, rundata.clawdata.t0, rundata.clawdata.tfinal, 
     #                           '../bathy/galveston_channel.tt3'])
     # geodata.topofiles.append([3, 1, 7, rundata.clawdata.t0, rundata.clawdata.tfinal, 
@@ -533,10 +519,12 @@ def set_storm(rundata):
     data.R_refine = [60.0e3,40e3,20e3]  # m
     
     # Storm parameters
-    data.storm_type = 1 # Type of storm
+    data.storm_type = 1
     data.landfall = days2seconds(ike_landfall.days) + ike_landfall.seconds
 
-    # Storm type 2 - Idealized storm track
+    # Convert NOAA best-track data to GeoClaw storm format and record path
+    ike = surge.storm.OldNOAABestTrackStorm(os.path.expandvars(os.path.join(os.getcwd(),'noaa_ike.storm')))
+    ike.write(os.path.expandvars(os.path.join(os.getcwd(),'ike.storm')))
     data.storm_file = os.path.expandvars(os.path.join(os.getcwd(),'ike.storm'))
 
     return data
