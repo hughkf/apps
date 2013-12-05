@@ -67,12 +67,16 @@ def read_tide_gauge_data(base_path, skiprows=5, verbose=False):
             'mean_water': (ndarray), 't': (ndarray)
 
     """
+    conv_dict = {"R":0,"S":1,"U":2,"V":3,"W":4,"X":5,"Y":6,"Z":7}
     stations = {}
     station_info_file = open(os.path.join(base_path,'Ike_Gauges_web.txt'),'r')
 
     # Skip past header
     for i in xrange(skiprows):
         station_info_file.readline()
+
+    # Read in all gauge data
+    data = scipy.io.loadmat(os.path.join(base_path, 'anomaly_series.mat'))
 
     # Read in each station
     for line in station_info_file:
@@ -91,9 +95,11 @@ def read_tide_gauge_data(base_path, skiprows=5, verbose=False):
                 print "Station %s: %s" % (data_line[0],stations[data_line[0]])
             
             # Load and extract real station data
-            data = scipy.io.loadmat(os.path.join(base_path,'result_%s.mat' % data_line[0]))
-            stations[data_line[0]]['t'] = data['yd_processed'][0,:]
-            stations[data_line[0]]['mean_water'] = data['mean_water'].transpose()[0,:]
+            # data = scipy.io.loadmat(os.path.join(base_path,'result_%s.mat' % data_line[0]))
+            # stations[data_line[0]]['t'] = data['yd_processed'][0,:]
+            # stations[data_line[0]]['mean_water'] = data['mean_water'].transpose()[0,:]
+            stations[data_line[0]]['t'] = data['yd_anomaly'][0,conv_dict[data_line[0]]][0]
+            stations[data_line[0]]['mean_water'] = data['anomaly'][0,conv_dict[data_line[0]]][0]
 
     station_info_file.close()
 
@@ -526,8 +532,11 @@ def setplot(plotdata):
             axes = plt.gca()
             # Add Kennedy gauge data
             kennedy_gauge = kennedy_gauges[gauge_name_trans[cd.gaugeno]]
+            # axes.plot(kennedy_gauge['t'] - seconds2days(date2seconds(gauge_landfall[0])), 
+            #          kennedy_gauge['mean_water'] + kennedy_gauge['depth'], 'k-', 
+            #          label='Gauge Data')
             axes.plot(kennedy_gauge['t'] - seconds2days(date2seconds(gauge_landfall[0])), 
-                     kennedy_gauge['mean_water'] + kennedy_gauge['depth'], 'k-', 
+                     kennedy_gauge['mean_water'], 'k-', 
                      label='Gauge Data')
 
             # Add GeoClaw gauge data
