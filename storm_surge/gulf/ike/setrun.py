@@ -457,8 +457,8 @@ def setgeo(rundata):
                               '../bathy/gulf_caribbean.tt3'])
     topo_data.topofiles.append([3, 1, 5, rundata.clawdata.t0, rundata.clawdata.tfinal,
                               '../bathy/NOAA_Galveston_Houston.tt3'])
-    # topo_data.topofiles.append([3, 1, 6, rundata.clawdata.t0, rundata.clawdata.tfinal,
-    #                           '../bathy/galveston_tx.asc'])
+    topo_data.topofiles.append([3, 1, 6, rundata.clawdata.t0, rundata.clawdata.tfinal,
+                              '../bathy/galveston_tx.asc'])
     # geodata.topofiles.append([3, 1, 7, rundata.clawdata.t0, rundata.clawdata.tfinal, 
     #                           '../bathy/galveston_channel.tt3'])
     # geodata.topofiles.append([3, 1, 7, rundata.clawdata.t0, rundata.clawdata.tfinal, 
