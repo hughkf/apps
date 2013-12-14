@@ -30,7 +30,7 @@ class StampedeStormJob(batch.stampede.StampedeJob):
 if __name__ == "__main__":
 
     # mic_threads = [0,122]
-    host_threads = [1, 2, 4, 8, 12, 16]
+    host_threads = [4, 8, 12, 16]
     mic_threads = [0]
 
     jobs = []
