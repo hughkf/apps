@@ -5,7 +5,7 @@
 import sys
 import os
 import urllib
-import subprocess
+import tarfile
 
 def get_bathy(url, destination=os.getcwd(), force=False):
     r"""Get bathymetry file located at `url`
@@ -22,25 +22,13 @@ def get_bathy(url, destination=os.getcwd(), force=False):
     else:
         print "Skipping %s, file already exists." % file_name
 
-    tar = False
-    gunzip = False
-    split_file_name = file_name.split('.')
-    if split_file_name[-1] == 'gz':
-        gunzip = True
-        if split_file_name[-2] == 'tar':
-            tar = True
-    if split_file_name[-1] == 'tgz':
-        gunzip = True
-        tar = True
-
-    if gunzip or tar:
-        print "Extracting %s" % file_name
-        if gunzip and tar:
-            subprocess.Popen('tar xvzf %s' % output_path, shell=True)
-        elif gunzip:
-            subprocess.Popen('gunzip %s' % output_path, shell=True)
-        elif tar:
-            subprocess.Popen('tar xvf %s' % output_path, shell=True)
+    # Extract file is applicable
+    try:
+        tarfile.open(output_path)
+        tarfile.extractall()
+        tarfile.close()
+    except tarfile.ReadError:
+        print "Could not untar file, may not be a tarfile or download failed."
 
 
 if __name__ == "__main__":
