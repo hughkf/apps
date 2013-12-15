@@ -46,8 +46,8 @@ def setrun(claw_pkg='geoclaw'):
     #------------------------------------------------------------------
     # Problem-specific parameters to be written to setprob.data:
     #------------------------------------------------------------------
-    
-    #probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
+    rundata.add_data(surge.data.SurgeData(),'stormdata')
+    rundata.add_data(surge.data.FrictionData(),'frictiondata')
 
     #------------------------------------------------------------------
     # Standard Clawpack parameters to be written to claw.data:
@@ -400,6 +400,10 @@ def setrun(claw_pkg='geoclaw'):
     # GeoClaw specific parameters:
     #------------------------------------------------------------------
     rundata = setgeo(rundata)
+    
+    # Storm specific parameters
+    set_storm(rundata)
+    set_friction(rundata)
 
     return rundata
     # end of function setrun
@@ -454,11 +458,11 @@ def setgeo(rundata):
     # See regions for control over these regions, need better bathy data for the
     # smaller domains
     topo_data.topofiles.append([3, 1, 5, rundata.clawdata.t0, rundata.clawdata.tfinal, 
-                              '../bathy/gulf_caribbean.tt3'])
+                              os.path.abspath('../bathy/gulf_caribbean.tt3')])
     topo_data.topofiles.append([3, 1, 5, rundata.clawdata.t0, rundata.clawdata.tfinal,
-                              '../bathy/NOAA_Galveston_Houston.tt3'])
-    topo_data.topofiles.append([3, 1, 6, rundata.clawdata.t0, rundata.clawdata.tfinal,
-                              '../bathy/galveston_tx.asc'])
+                              os.path.abspath('../bathy/NOAA_Galveston_Houston.tt3')])
+    #topo_data.topofiles.append([3, 1, 6, rundata.clawdata.t0, rundata.clawdata.tfinal,
+    #                          '../bathy/galveston_tx.asc'])
     # geodata.topofiles.append([3, 1, 7, rundata.clawdata.t0, rundata.clawdata.tfinal, 
     #                           '../bathy/galveston_channel.tt3'])
     # geodata.topofiles.append([3, 1, 7, rundata.clawdata.t0, rundata.clawdata.tfinal, 
@@ -559,10 +563,5 @@ if __name__ == '__main__':
         rundata = setrun(sys.argv[1])
     else:
         rundata = setrun()
-
-    rundata.add_data(surge.data.SurgeData(),'stormdata')
-    set_storm(rundata)
-    rundata.add_data(surge.data.FrictionData(),'frictiondata')
-    set_friction(rundata)
 
     rundata.write()
