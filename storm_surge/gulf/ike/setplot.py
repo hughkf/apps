@@ -7,12 +7,17 @@ function setplot is called to set the plot parameters.
     
 """
 
+# Make OM article figures only (and print quality)
 article = False
+
+# Include detided gauge data from Andrew Kennedy
+detided = True
 
 import os
 
 import numpy
 import scipy.io
+import scipy.interpolate
 
 # Plot customization
 import matplotlib
@@ -76,7 +81,8 @@ def read_tide_gauge_data(base_path, skiprows=5, verbose=False):
         station_info_file.readline()
 
     # Read in all gauge data
-    data = scipy.io.loadmat(os.path.join(base_path, 'anomaly_series.mat'))
+    if detided:
+        data = scipy.io.loadmat(os.path.join(base_path, 'anomaly_series.mat'))
 
     # Read in each station
     for line in station_info_file:
@@ -95,11 +101,13 @@ def read_tide_gauge_data(base_path, skiprows=5, verbose=False):
                 print "Station %s: %s" % (data_line[0],stations[data_line[0]])
             
             # Load and extract real station data
-            # data = scipy.io.loadmat(os.path.join(base_path,'result_%s.mat' % data_line[0]))
-            # stations[data_line[0]]['t'] = data['yd_processed'][0,:]
-            # stations[data_line[0]]['mean_water'] = data['mean_water'].transpose()[0,:]
-            stations[data_line[0]]['t'] = data['yd_anomaly'][0,conv_dict[data_line[0]]][0]
-            stations[data_line[0]]['mean_water'] = data['anomaly'][0,conv_dict[data_line[0]]][0]
+            if detided:
+                stations[data_line[0]]['t'] = data['yd_anomaly'][0,conv_dict[data_line[0]]][0]
+                stations[data_line[0]]['mean_water'] = data['anomaly'][0,conv_dict[data_line[0]]][0]
+            else:            
+                data = scipy.io.loadmat(os.path.join(base_path,'result_%s.mat' % data_line[0]))
+                stations[data_line[0]]['t'] = data['yd_processed'][0,:]
+                stations[data_line[0]]['mean_water'] = data['mean_water'].transpose()[0,:]
 
     station_info_file.close()
 
@@ -164,7 +172,7 @@ def setplot(plotdata):
     clawdata = clawutil.ClawInputData(2)
     clawdata.read(os.path.join(plotdata.outdir,'claw.data'))
     amrdata = amrclaw.AmrclawInputData(clawdata)
-    amrdata.read(os.path.join(plotdata.outdir,'amrclaw.data'))
+    amrdata.read(os.path.join(plotdata.outdir,'amr.data'))
     physics = geodata.GeoClawData()
     physics.read(os.path.join(plotdata.outdir,'geoclaw.data'))
     surge_data = surge.data.SurgeData()
@@ -532,11 +540,13 @@ def setplot(plotdata):
             axes = plt.gca()
             # Add Kennedy gauge data
             kennedy_gauge = kennedy_gauges[gauge_name_trans[cd.gaugeno]]
-            # axes.plot(kennedy_gauge['t'] - seconds2days(date2seconds(gauge_landfall[0])), 
-            #          kennedy_gauge['mean_water'] + kennedy_gauge['depth'], 'k-', 
-            #          label='Gauge Data')
-            axes.plot(kennedy_gauge['t'] - seconds2days(date2seconds(gauge_landfall[0])), 
-                     kennedy_gauge['mean_water'], 'k-', 
+            if detided:
+                axes.plot(kennedy_gauge['t'] - seconds2days(date2seconds(gauge_landfall[0])), 
+                         kennedy_gauge['mean_water'], 'k-', 
+                         label='Gauge Data')
+            else:
+                axes.plot(kennedy_gauge['t'] - seconds2days(date2seconds(gauge_landfall[0])), 
+                     kennedy_gauge['mean_water'] + kennedy_gauge['depth'], 'k-', 
                      label='Gauge Data')
 
             # Add GeoClaw gauge data
@@ -545,10 +555,42 @@ def setplot(plotdata):
                   geoclaw_gauge.q[3,:] + gauge_surface_offset[0], 'b--', 
                   label="GeoClaw")
 
+            # Plot level indicator
+            level_colors = [ (value / 256.0, value / 256.0, value / 256.0) 
+                                for value in [247, 217, 189, 150, 115, 82, 37] ]
+
+            for level in xrange(1,8):
+                mask = numpy.nonzero(level == numpy.array(geoclaw_gauge.level))
+                axes.plot(seconds2days(geoclaw_gauge.t[mask] 
+                                            - date2seconds(gauge_landfall[1])),
+                          numpy.ones(geoclaw_gauge.t.shape[0])[mask] * -0.75, 
+                          color=level_colors[level-1], linewidth='10')
+                y = 4.7 - (level - 1) * 0.3
+                axes.plot([-1.9,-1.85],[y+0.1, y+0.1], color=level_colors[level-1], 
+                                               linewidth='10')
+                axes.text(-1.75, y, "Level %s" % level)
+
             # Add ADCIRC gauge data
             ADCIRC_gauge = ADCIRC_gauges[kennedy_gauge['gauge_no']]
             axes.plot(seconds2days(ADCIRC_gauge[:,0] - gauge_landfall[2]), 
                      ADCIRC_gauge[:,1] + gauge_surface_offset[1], 'r-.', label="ADCIRC")
+
+            # Plot distance to storm eye
+            # ax2 = axes.twiny()
+            # t = track._data[:,0]
+            # x = track._data[:,1]
+            # y = track._data[:,2]
+            # x_interp = scipy.interpolate.interp1d(t, x)
+            # y_interp = scipy.interpolate.interp1d(t, y)
+            # ds = numpy.sqrt(
+            #         (x_interp(geoclaw_gauge.t) - geoclaw_gauge.location[0])**2 +
+            #         (y_interp(geoclaw_gauge.t) - geoclaw_gauge.location[1])**2)
+            # ax2.plot(
+            #     seconds2days(geoclaw_gauge.t - date2seconds(gauge_landfall[1])), 
+            #     ds, 
+            #     'g', label="Eye Distance")
+            # # ax2.set_ylim()
+            # ax2.set_ylabel("Distance to Storm Eye (km)")
 
             # Fix up plot
             axes.set_title('Station %s' % cd.gaugeno)

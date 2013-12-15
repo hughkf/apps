@@ -57,7 +57,7 @@ SOURCES = \
   $(GEOLIB)/surge/flag2refine2.f90 \
   $(GEOLIB)/surge/b4step2.f90 \
   $(GEOLIB)/surge/tick.f \
-  $(GEOLIB)/valout.f \
+  $(GEOLIB)/surge/valout.f \
   $(GEOLIB)/qinit.f90 \
   $(GEOLIB)/bc2amr.f \
   $(GEOLIB)/movetopo.f \
