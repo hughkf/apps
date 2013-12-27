@@ -19,7 +19,7 @@ class StampedeStormJob(batch.stampede.StampedeJob):
         self.type = "surge"
         self.name = "omp-test"
         self.prefix = "h%sm%sa%sg%s" % (self.omp_num_threads, self.mic_omp_num_threads, 
-                                        self.mic_affinity, self.maxgrid1d)
+                                        self.mic_affinity[0], self.maxgrid1d)
         self.executable = "xgeoclaw"
 
         if self.mic_omp_num_threads == 0:
