@@ -69,7 +69,7 @@ SOURCES = \
   $(RIEMANN)/rpn2_geoclaw.f \
   $(RIEMANN)/rpt2_geoclaw.f \
   $(RIEMANN)/geoclaw_riemann_utils.f \
-  $(GEOLIB)/step2.f \
+  $(GEOLIB)/step2_sweep.f90 \
   $(GEOLIB)/flux2fw.f \
   $(GEOLIB)/qad.f \
   $(GEOLIB)/update.f \

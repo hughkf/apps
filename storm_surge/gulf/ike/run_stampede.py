@@ -6,16 +6,20 @@ import batch.stampede
 
 class StampedeStormJob(batch.stampede.StampedeJob):
 
-    def __init__(self, omp_num_threads, mic_omp_num_threads):
+    def __init__(self, omp_num_threads, mic_omp_num_threads, mic_affinity="balanced"):
 
         super(StampedeStormJob, self).__init__()
 
         self.omp_num_threads = omp_num_threads
         self.mic_omp_num_threads = mic_omp_num_threads
+        # Affinity on MIC, options are none, compact, explicit, scatter, balanced 
+        self.mic_affinity = mic_affinity
+        self.maxgrid1d = 60
 
         self.type = "surge"
         self.name = "omp-test"
-        self.prefix = "h%sm%s" % (self.omp_num_threads, self.mic_omp_num_threads)
+        self.prefix = "h%sm%sa%sg%s" % (self.omp_num_threads, self.mic_omp_num_threads, 
+                                        self.mic_affinity, self.maxgrid1d)
         self.executable = "xgeoclaw"
 
         if self.mic_omp_num_threads == 0:
@@ -29,9 +33,9 @@ class StampedeStormJob(batch.stampede.StampedeJob):
 
 if __name__ == "__main__":
 
-    # mic_threads = [0,122]
     host_threads = [4, 8, 12, 16]
-    mic_threads = [0]
+    #mic_threads = [240 / thread_count for thread_count in host_threads]
+    mic_threads = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240]
 
     jobs = []
     for host_thread_count in host_threads:
