@@ -66,12 +66,9 @@ SOURCES = \
   $(GEOLIB)/topointegral.f \
   $(GEOLIB)/bilinearintegral.f \
   $(GEOLIB)/stepgrid.f \
-  $(RIEMANN)/rpn2_geoclaw.f \
-  $(RIEMANN)/rpt2_geoclaw.f \
-  $(RIEMANN)/geoclaw_riemann_utils.f \
-  $(GEOLIB)/step2_sweep.f90 \
+  $(GEOLIB)/step2.f90 \
   $(GEOLIB)/flux2fw.f \
-  $(GEOLIB)/qad.f \
+  ./qad.f90 \
   $(GEOLIB)/update.f \
   $(GEOLIB)/dumpgauge.f \
   $(GEOLIB)/upbnd.f  \
