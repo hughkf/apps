@@ -46,7 +46,8 @@ def setrun(claw_pkg='geoclaw'):
     #------------------------------------------------------------------
     # Problem-specific parameters to be written to setprob.data:
     #------------------------------------------------------------------
-    
+    rundata.add_data(surge.data.SurgeData(),'stormdata')
+    rundata.add_data(surge.data.FrictionData(),'frictiondata')
     #probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
 
     #------------------------------------------------------------------
@@ -353,6 +354,10 @@ def setrun(claw_pkg='geoclaw'):
     #------------------------------------------------------------------
     rundata = setgeo(rundata)
 
+    # Storm specific parameters
+    set_storm(rundata)
+    set_friction(rundata)
+
     return rundata
     # end of function setrun
     # ----------------------
@@ -409,12 +414,12 @@ def setgeo(rundata):
     # topo_data.topofiles.append([3, 1, 3, rundata.clawdata.t0, 
     #                                    rundata.clawdata.tfinal, 
     #                                    '../bathy/atlantic_2min.tt3'])
-    topo_data.topofiles.append([3, 1, 3, rundata.clawdata.t0, 
+    topo_data.topofiles.append([3, 1, 4, rundata.clawdata.t0, 
                                        rundata.clawdata.tfinal, 
-                                       '../bathy/full_2min.tt3'])
-    topo_data.topofiles.append([3, 1, 5, rundata.clawdata.t0, 
+                                       os.path.expandvars('$WORK/bathy/full_1min.tt3')])
+    topo_data.topofiles.append([3, 1, 7, rundata.clawdata.t0, 
                                        rundata.clawdata.tfinal, 
-                                       '../bathy/newyork_3s.tt3'])
+                                       os.path.expandvars('$WORK/bathy/newyork_3s.tt3')])
 
     # == setqinit.data values ==
     rundata.qinit_data.qinit_type = 0
@@ -459,7 +464,9 @@ def set_storm(rundata):
     data.landfall = days2seconds(sandy_landfall.days) + sandy_landfall.seconds
 
     # Storm type 2 - Idealized storm track
-    data.storm_file = os.path.expandvars(os.path.join(os.getcwd(),'sandy.storm'))
+    sandy = surge.storm.OldNOAABestTrackStorm(os.path.abspath(os.path.join(os.getcwd(),'noaa_sandy.storm')))
+    sandy.write(os.path.abspath(os.path.join(os.getcwd(),'sandy.storm')))
+    data.storm_file = os.path.abspath(os.path.join(os.getcwd(),'sandy.storm'))
 
     return data
 
@@ -488,10 +495,5 @@ if __name__ == '__main__':
         rundata = setrun(sys.argv[1])
     else:
         rundata = setrun()
-
-    rundata.add_data(surge.data.SurgeData(),'stormdata')
-    set_storm(rundata)
-    rundata.add_data(surge.data.FrictionData(),'frictiondata')
-    set_friction(rundata)
 
     rundata.write()
