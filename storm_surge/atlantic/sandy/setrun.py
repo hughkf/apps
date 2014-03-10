@@ -287,7 +287,7 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 6
+    amrdata.amr_levels_max = 5
 
     # List of refinement ratios at each level (length at least mxnest-1)
     amrdata.refinement_ratios_x = [2,2,2,6,16]
@@ -342,13 +342,14 @@ def setrun(claw_pkg='geoclaw'):
     regions = rundata.regiondata.regions
     # to specify regions of refinement append lines of the form
     #  [minlevel,maxlevel,t1,t2,x1,x2,y1,y2]
-    regions.append([1,7,clawdata.t0,clawdata.tfinal,-74.2,-73.8,40.55,41.0])
+    #regions.append([1,7,clawdata.t0,clawdata.tfinal,-74.2,-73.8,40.55,41.0])
     
     # == setgauges.data values ==
     # for gauges append lines of the form  [gaugeno, x, y, t1, t2]
     rundata.gaugedata.gauges.append([1,-74.0,40.55,clawdata.t0,clawdata.tfinal])
     rundata.gaugedata.gauges.append([2,-63.0,43.5,clawdata.t0,clawdata.tfinal])
-
+    rundata.gaugedata.gauges.append([3,-74.015026, 40.700019,clawdata.t0, clawdata.tfinal])
+    rundata.gaugedata.gauges.append([4,-73.765613, 40.810147,clawdata.t0, clawdata.tfinal])
     #------------------------------------------------------------------
     # GeoClaw specific parameters:
     #------------------------------------------------------------------
@@ -414,7 +415,7 @@ def setgeo(rundata):
     # topo_data.topofiles.append([3, 1, 3, rundata.clawdata.t0, 
     #                                    rundata.clawdata.tfinal, 
     #                                    '../bathy/atlantic_2min.tt3'])
-    topo_data.topofiles.append([3, 1, 4, rundata.clawdata.t0, 
+    topo_data.topofiles.append([3, 1, 3, rundata.clawdata.t0, 
                                        rundata.clawdata.tfinal, 
                                        os.path.expandvars('$WORK/bathy/full_1min.tt3')])
     topo_data.topofiles.append([3, 1, 7, rundata.clawdata.t0, 
