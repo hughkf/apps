@@ -37,7 +37,6 @@ MODULES = \
  $(AMRLIB)/gauges_module.f90 \
  $(GEOLIB)/geoclaw_module.f90 \
  $(GEOLIB)/topo_module.f90 \
- $(GEOLIB)/dtopo_module.f90 \
  $(GEOLIB)/qinit_module.f90 \
  $(GEOLIB)/refinement_module.f90 \
  $(GEOLIB)/fixedgrids_module.f90 \
@@ -53,15 +52,15 @@ SOURCES = \
   $(GEOLIB)/surge/src1d.f90 \
   $(GEOLIB)/surge/setaux.f90 \
   $(GEOLIB)/surge/setprob.f90 \
+  $(GEOLIB)/topo_update.f90 \
   $(GEOLIB)/surge/flag2refine2.f90 \
   $(GEOLIB)/surge/b4step2.f90 \
   $(GEOLIB)/surge/tick.f \
   $(GEOLIB)/valout.f \
   $(GEOLIB)/qinit.f90 \
   $(GEOLIB)/bc2amr.f \
-  $(GEOLIB)/movetopo.f \
   $(GEOLIB)/allowflag.f90 \
-  $(GEOLIB)/cellgridintegrate.f \
+  $(GEOLIB)/cellgridintegrate2.f \
   $(GEOLIB)/topointegral.f \
   $(GEOLIB)/bilinearintegral.f \
   $(GEOLIB)/stepgrid.f \
@@ -177,8 +176,19 @@ SOURCES = \
 # Include Makefile containing standard definitions and make options:
 include $(CLAWMAKE)
 
+
+# Construct the topography data
+.PHONY: topo all
+.SUFFIXES: .tt3
+
+%.tt3 : cd ../bathy ; python get_bathy.py ; cd ../ike
+
 topo: ../bathy/gulf_caribbean.tt3 ../bathy/NOAA_Galveston_Houston.tt3 ../bathy/galveston_tx.asc
 	../bathy/get_bathy.py
+
+all: 
+	$(MAKE) topo
+	$(MAKE) .plots
 
 ### DO NOT remove this line - make depends on it ###
 

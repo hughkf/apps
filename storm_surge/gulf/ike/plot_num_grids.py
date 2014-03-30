@@ -31,7 +31,7 @@ convert2rgbfloat = lambda rgb: [value / 256.0 for value in rgb]
 days2seconds = lambda days: days * 60.0**2 * 24.0
 seconds2days = lambda seconds: seconds / (60.0**2 * 24.0)
 
-def set_day_ticks(new_ticks=[-3, -2, -1, 0, 1]):
+def set_day_ticks(new_ticks=[-3, -2, -1, 0]):
     plt.xticks(new_ticks, [str(tick) for tick in new_ticks])
 
 def set_cell_ticks():
@@ -99,6 +99,8 @@ if __name__ == "__main__":
     axes.stackplot(time ,num_grids.transpose(), colors=colors)
     axes.set_xlabel('Days from landfall')
     plt.subplots_adjust(left=0.13, bottom=0.12, right=0.90, top=0.90)
+    axes.set_xlim([-2,0.75])
+    axes.set_ylim([0,1e4])
     set_day_ticks()
     axes.set_ylabel('Number of Grids')
     axes.set_title("Number of Grids per Level in Time")
@@ -112,6 +114,8 @@ if __name__ == "__main__":
     axes = fig.add_subplot(111)
     axes.set_yscale('log')
     axes.stackplot(time, num_cells.transpose(), colors=colors)
+    axes.set_xlim([-2,0.75])
+    axes.set_ylim([0,1e7])
     set_day_ticks()
     plt.subplots_adjust(left=0.13, bottom=0.12, right=0.90, top=0.90)
     axes.set_xlabel('Days from landfall')

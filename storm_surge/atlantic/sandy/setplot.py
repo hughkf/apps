@@ -8,7 +8,7 @@ function setplot is called to set the plot parameters.
 """
 import os
 
-# import numpy as np
+import numpy
 # import matplotlib
 
 import matplotlib.pyplot as plt
@@ -25,6 +25,37 @@ try:
     from setplotfg import setplotfg
 except:
     setplotfg = None
+
+days2seconds = lambda days: days * 60.0**2 * 24.0
+date2seconds = lambda date: days2seconds(date.days) + date.seconds
+seconds2days = lambda secs: secs / (24.0 * 60.0**2)
+FT2METERS = 0.3048
+
+def convert_time2seconds(time):
+    new_year = datetime.datetime(2012,1,1,0,0)
+    dt = time - new_year
+    return days2seconds(dt.days)
+
+def read_gauge_file(path):
+    with open(path, 'r') as gauge_file:
+        # Header
+        gauge_file.readline()
+        
+        # Data format:
+        # date, elevation MLLW (ft), astro tide MLLW (ft), obs. surge (ft) NYHOPS-predicted MLLW (ft), Predicted surge (ft)
+        t = []
+        eta = []
+        for line in gauge_file:
+            data = line.split(',')
+            time = datetime.datetime.strptime(data[0], "%Y-%m-%d %H:%M:%S")
+            t.append(convert_time2seconds(time))
+            eta.append([float(value) for value in data[1:]])
+
+    t = numpy.array(t)
+    eta = numpy.array(eta) * FT2METERS
+
+    return t, eta
+
 
 def setplot(plotdata):
     r"""Setplot function for surge plotting"""
@@ -76,7 +107,10 @@ def setplot(plotdata):
     wind_limits = [0,55]
     pressure_limits = [966,1013]
     friction_bounds = [0.01,0.04]
-    vorticity_limits = [-1.e-2,1.e-2]
+
+    surface_ticks = [-5,-4,-3,-2,-1,0,1,2,3,4,5]
+    surface_labels = [str(value) for value in surface_ticks]
+    surface_contours = [-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-0.5,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5]
 
     def pcolor_afteraxes(current_data):
         surge_afteraxes(current_data)
@@ -84,6 +118,10 @@ def setplot(plotdata):
     
     def contour_afteraxes(current_data):
         surge_afteraxes(current_data)
+
+    def add_custom_colorbar_ticks_to_axes(axes, item_name, ticks, tick_labels=None):
+        axes.plotitem_dict[item_name].colorbar_ticks = ticks
+        axes.plotitem_dict[item_name].colorbar_tick_labels = tick_labels
 
     
     # ==========================================================================
@@ -210,44 +248,106 @@ def setplot(plotdata):
     # ========================================================================
     #  Figures for gauges
     # ========================================================================
+    stations = {4:["Kings Point", "kings_point_gauge.csv"], 
+                3:["Battery Park", "battery_gauge.csv"]}
+    # new_year = datetime.datetime(2012,1,1,0)
+    sandy_landfall = datetime.datetime(2012,10,29,8,0) - datetime.datetime(2012,1,1,0)
+    gauge_landfall = [sandy_landfall, 
+                      sandy_landfall, 
+                      sandy_landfall ]
+    gauge_surface_offset = [0.0, 0.0]
+
     plotfigure = plotdata.new_plotfigure(name='Surface, Speeds',   
                                          figno=fig_num_counter.get_counter(),
                                          type='each_gauge')
     plotfigure.show = True
     plotfigure.clf_each_gauge = True
 
-    # Surface and Topography
+    def gauge_after_axes(cd):
+
+        if cd.gaugeno in [3,4]:
+            axes = plt.gca()
+            axes.cla()
+
+            # Add Davidson observations
+            t, eta = read_gauge_file(stations[cd.gaugeno][1])
+            # axes.plot(seconds2days(t), 
+            import pdb; pdb.set_trace()
+            axes.plot(t, eta[:,2], 'k-', label='Gauge Data')
+
+            # Add GeoClaw gauge data
+            # geoclaw_gauge = cd.gaugesoln
+            # axes.plot(seconds2days(geoclaw_gauge.t),
+            #       geoclaw_gauge.q[3,:] + gauge_surface_offset[0], 'b--', 
+            #       label="GeoClaw")
+
+            # Add Davidson predicted
+            # axes.plot(seconds2days(t),
+            axes.plot(t, eta[:,4], 'r-.', label="Stevens")
+
+            # Fix up plot
+            axes.set_title(stations[cd.gaugeno][0])
+            axes.set_xlabel('Days relative to landfall')
+            axes.set_ylabel('Surface (m)')
+            # axes.set_xlim([-2,1])
+            # axes.set_ylim([-1,5])
+            # axes.set_xticks([-2,-1,0,1])
+            # axes.set_xticklabels([r"$-2$",r"$-1$",r"$0$",r"$1$"])
+            axes.grid(True)
+            axes.legend()
+
+            plt.hold(False)
+
+    # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
-    # plotaxes.axescmd = 'subplot(121)'
-    try:
-        plotaxes.xlimits = [amrdata.t0,amrdata.tfinal]
-    except:
-        pass
-    plotaxes.ylimits = surface_limits
+    # plotaxes.xlimits = [-2,1]
+    # plotaxes.xlabel = "Days from landfall"
+    # plotaxes.ylabel = "Surface (m)"
+    # plotaxes.ylimits = [-1,5]
     plotaxes.title = 'Surface'
-    plotaxes.afteraxes = surge.plot.gauge_afteraxes
+    plotaxes.afteraxes = gauge_after_axes
+
+    # Plot surface as blue curve:
     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
     plotitem.plot_var = 3
     plotitem.plotstyle = 'b-'
 
-    # # Speeds
-    # plotaxes = plotfigure.new_plotaxes()
-    # plotaxes.axescmd = 'subplot(122)'
-    # try:
-    #     plotaxes.xlimits = [amrdata.t0,amrdata.tfinal]
-    # except:
-    #     pass
-    # plotaxes.ylimits = surface_limits
-    # plotaxes.title = 'Momenta'
-    # plotaxes.afteraxes = surge.plot.gauge_afteraxes
+    # Gauge locations
+    gauge_xlimits = [-74, -73]
+    gauge_ylimits = [40.15, 40.95]
+    gauge_location_shrink = 0.75
+    def gauge_after_axes(cd):
+        plt.subplots_adjust(left=0.12, bottom=0.06, right=0.97, top=0.97)
+        surge_afteraxes(cd)
+        surge.plot.gauge_locations(cd, gaugenos=[1, 2, 3, 4])
+        plt.title("Gauge Locations")
 
-    # plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    # plotitem.plot_var = 1
-    # plotitem.plotstyle = 'r-'
-    # plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
-    # plotitem.plot_var = 2
-    # plotitem.plotstyle = 'b-'
+    plotfigure = plotdata.new_plotfigure(name='Gauge Locations',  
+                                         figno=fig_num_counter.get_counter())
+    plotfigure.show = True
 
+    # Set up for axes in this figure:
+    plotaxes = plotfigure.new_plotaxes()
+    plotaxes.title = 'Surface'
+    plotaxes.scaled = True
+    plotaxes.xlimits = gauge_xlimits
+    plotaxes.ylimits = gauge_ylimits
+    plotaxes.afteraxes = gauge_after_axes
+    
+    surge.plot.add_surface_elevation(plotaxes, plot_type='contourf', 
+                                               contours=surface_contours,
+                                               shrink=gauge_location_shrink)
+    # surge.plot.add_surface_elevation(plotaxes, plot_type="contourf")
+    add_custom_colorbar_ticks_to_axes(plotaxes, 'surface', surface_ticks, surface_labels)
+    surge.plot.add_land(plotaxes)
+    # plotaxes.plotitem_dict['surface'].amr_patchedges_show = [0,0,0,0,0,0,0]
+    # plotaxes.plotitem_dict['surface'].add_colorbar = False
+    # plotaxes.plotitem_dict['surface'].pcolor_cmap = plt.get_cmap('jet')
+    # plotaxes.plotitem_dict['surface'].pcolor_cmap = plt.get_cmap('gist_yarg')
+    # plotaxes.plotitem_dict['surface'].pcolor_cmin = 0.0
+    # plotaxes.plotitem_dict['surface'].pcolor_cmax = 5.0
+    plotaxes.plotitem_dict['surface'].amr_patchedges_show = [0,0,0,0,0,0,0]
+    plotaxes.plotitem_dict['land'].amr_patchedges_show = [0,0,0,0,0,0,0]
 
 
 
