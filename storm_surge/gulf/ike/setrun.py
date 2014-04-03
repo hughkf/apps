@@ -204,7 +204,7 @@ def setrun(claw_pkg='geoclaw'):
     #  0 or 'none'      ==> donor cell (only normal solver used)
     #  1 or 'increment' ==> corner transport of waves
     #  2 or 'all'       ==> corner transport of 2nd order corrections too
-    clawdata.transverse_waves = 1
+    clawdata.transverse_waves = 2
 
     # Number of waves in the Riemann solution:
     clawdata.num_waves = 3
