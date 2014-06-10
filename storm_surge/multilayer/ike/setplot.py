@@ -131,7 +131,8 @@ gauge_landfall.append(datetime.datetime(2008,9,13 - 1,7)
 gauge_landfall.append(days2seconds(4.25))
 
 # Read in Kennedy et al Gauges
-kennedy_gauge_path = './gauge_data'
+base_path = os.path.expandvars("$CLAW/apps/storm_surge/gulf/ike/")
+kennedy_gauge_path = os.path.join(base_path,'gauge_data')
 kennedy_gauges = read_tide_gauge_data(kennedy_gauge_path)
 keys = kennedy_gauges.keys()
 for gauge_label in keys:
@@ -140,7 +141,7 @@ for gauge_label in keys:
 gauge_list = [gauge['gauge_no'] for gauge in kennedy_gauges.itervalues()]
 
 # Read in ADCIRC gauges
-adcirc_path = "./gauge_data"
+adcirc_path = os.path.join(base_path,"gauge_data")
 ADCIRC_gauges = read_adcirc_gauge_data(base_path=os.path.join(adcirc_path,'new_data'))
 
 
@@ -150,7 +151,7 @@ def setplot(plotdata):
     
 
     plotdata.clearfigures()  # clear any old figures,axes,items data
-    plotdata.format = 'binary'
+    plotdata.format = 'ascii'
 
     fig_num_counter = surge.plot.figure_counter()
 

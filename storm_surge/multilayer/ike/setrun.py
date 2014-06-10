@@ -13,6 +13,8 @@ import datetime
 import numpy as np
 
 import clawpack.geoclaw.surge as surge
+import clawpack.geoclaw.surge as surge
+import clawpack.geoclaw.multilayer as multilayer
 
 # Need to adjust the date a bit due to weirdness with leap year (I think)
 ike_landfall = datetime.datetime(2008,9,13 - 1,7) - datetime.datetime(2008,1,1,0)
@@ -46,6 +48,10 @@ def setrun(claw_pkg='geoclaw'):
     #------------------------------------------------------------------
     # Problem-specific parameters to be written to setprob.data:
     #------------------------------------------------------------------
+    rundata.add_data(surge.data.SurgeData(),'stormdata')
+    set_storm(rundata)
+    rundata.add_data(multilayer.data.MultilayerData(),'multilayer_data')
+    set_multilayer(rundata)
     
     #probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
 
@@ -84,16 +90,15 @@ def setrun(claw_pkg='geoclaw'):
     # ---------------
 
     # Number of equations in the system:
-    clawdata.num_eqn = 3
+    clawdata.num_eqn = 6
 
     # Number of auxiliary variables in the aux array (initialized in setaux)
-    # First three are from shallow GeoClaw, fourth is friction and last 3 are
-    # storm fields
-    clawdata.num_aux = 3 + 1 + 3
+    # First three are from shallow GeoClaw, fourth is friction, 5th through 
+    # num_layers are used for the multilayer code and last 3 are storm fields
+    clawdata.num_aux = 4 + rundata.multilayer_data.num_layers + 3
 
     # Index of aux array corresponding to capacity function, if there is one:
     clawdata.capa_index = 2
-
     
     
     # -------------
@@ -144,7 +149,7 @@ def setrun(claw_pkg='geoclaw'):
         clawdata.output_t0 = True
         
 
-    clawdata.output_format = 'binary'      # 'ascii' or 'netcdf' 
+    clawdata.output_format = 'ascii'      # 'ascii' or 'netcdf' 
     clawdata.output_q_components = 'all'   # could be list such as [True,True]
     clawdata.output_aux_components = 'all'
     clawdata.output_aux_onlyonce = False    # output aux arrays only at t0
@@ -207,7 +212,7 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.transverse_waves = 1
 
     # Number of waves in the Riemann solution:
-    clawdata.num_waves = 3
+    clawdata.num_waves = 6
     
     # List of limiters to use for each wave family:  
     # Required:  len(limiter) == num_waves
@@ -217,7 +222,7 @@ def setrun(claw_pkg='geoclaw'):
     #   2 or 'superbee' ==> superbee
     #   3 or 'mc'       ==> MC limiter
     #   4 or 'vanleer'  ==> van Leer
-    clawdata.limiter = ['mc', 'mc', 'mc']
+    clawdata.limiter = ['mc', 'mc', 'mc', 'mc', 'mc', 'mc']
 
     clawdata.use_fwaves = True    # True ==> use f-wave version of algorithms
     
@@ -277,7 +282,7 @@ def setrun(claw_pkg='geoclaw'):
     amrdata = rundata.amrdata
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 6
+    amrdata.amr_levels_max = 1
 
     # List of refinement ratios at each level (length at least mxnest-1)
     amrdata.refinement_ratios_x = [2,2,2,6,16]
@@ -289,8 +294,9 @@ def setrun(claw_pkg='geoclaw'):
     # This must be a list of length maux, each element of which is one of:
     #   'center',  'capacity', 'xleft', or 'yleft'  (see documentation).
 
-    amrdata.aux_type = ['center','capacity','yleft','center','center','center',
-                         'center', 'center', 'center']
+    amrdata.aux_type = ['center','capacity','yleft','center',
+                        'center','center',
+                        'center', 'center', 'center']
 
 
     # Flag using refinement routine flag2refine rather than richardson error
@@ -414,6 +420,8 @@ def setrun(claw_pkg='geoclaw'):
     # GeoClaw specific parameters:
     #------------------------------------------------------------------
     rundata = setgeo(rundata)
+    rundata.add_data(surge.data.FrictionData(),'frictiondata')
+    set_friction(rundata)
 
     return rundata
     # end of function setrun
@@ -468,11 +476,11 @@ def setgeo(rundata):
     # See regions for control over these regions, need better bathy data for the
     # smaller domains
     topo_data.topofiles.append([3, 1, 5, rundata.clawdata.t0, rundata.clawdata.tfinal, 
-                              '../bathy/gulf_caribbean.tt3'])
+                              '../../gulf/bathy/gulf_caribbean.tt3'])
     topo_data.topofiles.append([3, 1, 5, rundata.clawdata.t0, rundata.clawdata.tfinal,
-                              '../bathy/NOAA_Galveston_Houston.tt3'])
-    topo_data.topofiles.append([3, 1, 6, rundata.clawdata.t0, rundata.clawdata.tfinal,
-                              '../bathy/galveston_tx.asc'])
+                              '../../gulf/bathy/NOAA_Galveston_Houston.tt3'])
+    # topo_data.topofiles.append([3, 1, 6, rundata.clawdata.t0, rundata.clawdata.tfinal,
+    #                           '../../gulf/bathy/galveston_tx.asc'])
     # geodata.topofiles.append([3, 1, 7, rundata.clawdata.t0, rundata.clawdata.tfinal, 
     #                           '../bathy/galveston_channel.tt3'])
     # geodata.topofiles.append([3, 1, 7, rundata.clawdata.t0, rundata.clawdata.tfinal, 
@@ -564,6 +572,21 @@ def set_friction(rundata):
     return data
 
 
+def set_multilayer(rundata):
+
+    data = rundata.multilayer_data
+
+    # Physical parameters
+    data.num_layers = 2
+    data.rho = [1025.0, 1028.0]
+    data.eta = [0.0, -200.0]
+
+    # Algorithm parameters
+    data.eigen_method = 2
+    data.inundation_method = 2
+    data.check_richardson = False
+    data.richardson_tolerance = 0.95
+
 if __name__ == '__main__':
     # Set up run-time parameters and write all data files.
     import sys
@@ -571,10 +594,5 @@ if __name__ == '__main__':
         rundata = setrun(sys.argv[1])
     else:
         rundata = setrun()
-
-    rundata.add_data(surge.data.SurgeData(),'stormdata')
-    set_storm(rundata)
-    rundata.add_data(surge.data.FrictionData(),'frictiondata')
-    set_friction(rundata)
 
     rundata.write()

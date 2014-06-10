@@ -22,13 +22,37 @@ PLOTDIR = _plots               # Directory for plots
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 FFLAGS ?= -W -Wall -fbounds-check -pedantic-errors -Wunderflow -ffpe-trap=zero,overflow -g
 
+# Include flags for LAPACK linking
+UNAME = $(shell uname)
+ifeq ($(UNAME), Darwin)
+	ifndef LFLAGS
+		LFLAGS = -framework accelerate $(FFLAGS)
+	else
+		LFLAGS += -framework accelerate $(FFLAGS)
+	endif
+else ifeq ($(shell hostname), sandy.ices.utexas.edu)
+	# Created using Intel MKL Link Line Advisor
+	# http://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/
+	FFLAGS += -I$(MKLROOT)/include
+	ifndef LFLAGS                                                                                                                                    
+	    LFLAGS =  -Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_core.a $(MKLROOT)/lib/intel64/libmkl_sequential.a -Wl,--end-group -lpthread -lm $(FFLAGS)
+	else
+	    LFLAGS +=  -Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_ilp64.a $(MKLROOT)/lib/intel64/libmkl_core.a $(MKLROOT)/lib/intel64/libmkl_sequential.a -Wl,--end-group -lpthread -lm $(FFLAGS)
+	endif
+else ifeq ($(UNAME), Linux)
+	ifndef LFLAGS
+		LFLAGS = -llapack $(FFLAGS)
+	else
+		LFLAGS += -llapack $(FFLAGS)
+	endif
+endif
+
 # ---------------------------------
 # List of sources for this program:
 # ---------------------------------
 
 AMRLIB = $(CLAW)/amrclaw/src/2d
 GEOLIB = $(CLAW)/geoclaw/src/2d/shallow
-RIEMANN = $(CLAW)/riemann/src
 
 MODULES = \
  $(GEOLIB)/utility_module.f90 \
@@ -37,7 +61,6 @@ MODULES = \
  $(AMRLIB)/gauges_module.f90 \
  $(GEOLIB)/geoclaw_module.f90 \
  $(GEOLIB)/topo_module.f90 \
- $(GEOLIB)/qinit_module.f90 \
  $(GEOLIB)/refinement_module.f90 \
  $(GEOLIB)/fixedgrids_module.f90 \
  $(GEOLIB)/surge/holland_storm_module.f90 \
@@ -45,38 +68,41 @@ MODULES = \
  $(GEOLIB)/surge/stommel_storm_module.f90 \
  $(GEOLIB)/surge/storm_module.f90 \
  $(GEOLIB)/surge/friction_module.f90 \
- $(GEOLIB)/fgmax_module.f90
+ $(GEOLIB)/multilayer/multilayer_module.f90 \
+ $(GEOLIB)/multilayer/qinit_module.f90 \
+ $(GEOLIB)/fgmax_module.f90 \
+ $(CLAW)/riemann/src/multilayer_eigen_module.f90
 
 SOURCES = \
-  $(GEOLIB)/surge/src2.f90 \
-  $(GEOLIB)/surge/src1d.f90 \
-  $(GEOLIB)/surge/setaux.f90 \
-  $(GEOLIB)/surge/setprob.f90 \
+  $(GEOLIB)/multilayer/src2.f90 \
+  $(GEOLIB)/multilayer/src1d.f90 \
+  $(GEOLIB)/multilayer/setaux.f90 \
+  $(GEOLIB)/multilayer/setprob.f90 \
   $(GEOLIB)/topo_update.f90 \
   $(GEOLIB)/surge/flag2refine2.f90 \
-  $(GEOLIB)/surge/b4step2.f90 \
+  $(GEOLIB)/multilayer/b4step2.f90 \
   $(GEOLIB)/surge/tick.f \
-  $(GEOLIB)/valout.f \
-  $(GEOLIB)/qinit.f90 \
+  $(GEOLIB)/multilayer/valout.f \
+  $(GEOLIB)/multilayer/qinit.f90 \
   $(GEOLIB)/bc2amr.f \
   $(GEOLIB)/allowflag.f90 \
   $(GEOLIB)/cellgridintegrate2.f \
   $(GEOLIB)/topointegral.f \
   $(GEOLIB)/bilinearintegral.f \
-  $(GEOLIB)/stepgrid.f \
-  $(RIEMANN)/rpn2_geoclaw.f \
-  $(RIEMANN)/rpt2_geoclaw.f \
-  $(RIEMANN)/geoclaw_riemann_utils.f \
+  $(GEOLIB)/multilayer/stepgrid.f \
+  $(CLAW)/riemann/src/rpn2_layered_shallow_water.f90 \
+  $(CLAW)/riemann/src/rpt2_layered_shallow_water.f90 \
+  $(CLAW)/riemann/src/geoclaw_riemann_utils.f \
   $(GEOLIB)/step2.f \
   $(GEOLIB)/flux2fw.f \
   $(GEOLIB)/qad.f \
   $(GEOLIB)/update.f \
-  $(GEOLIB)/dumpgauge.f \
+  $(GEOLIB)/multilayer/dumpgauge.f \
   $(GEOLIB)/upbnd.f  \
   $(GEOLIB)/setgrd.f \
   $(GEOLIB)/gfixup.f \
   $(GEOLIB)/ginit.f \
-  $(GEOLIB)/getmaxspeed.f90 \
+  $(GEOLIB)/multilayer/getmaxspeed.f90 \
   $(GEOLIB)/advanc.f \
   $(GEOLIB)/filval.f90 \
   $(GEOLIB)/filpatch.f90 \
