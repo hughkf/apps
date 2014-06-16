@@ -180,37 +180,33 @@ def setplot(plotdata):
     surge_afteraxes = lambda cd: surge.plot.surge_afteraxes(cd, 
                                         track, landfall, plot_direction=False)
 
-    # Color limits
+    # Plot limits and labels
     surface_range = 5.0
     speed_range = 3.0
     eta = multilayer_data.eta
-    if not isinstance(eta,list):
-        eta = [eta]
-    top_surface_limits = [eta[0]-surface_range,eta[0]+surface_range]
-    top_surface_contours = [-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-0.5,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5]
-    top_surface_ticks = [-5,-4,-3,-2,-1,0,1,2,3,4,5]
-    top_surface_labels = [str(value) for value in top_surface_ticks]
-    top_speed_limits = [0.0,speed_range]
-    top_speed_contours = numpy.linspace(0.0,speed_range,13)
-    top_speed_ticks = [0,1,2,3]
-    top_speed_labels = [str(value) for value in top_speed_ticks]
 
-    internal_surface_limits = [eta[1]-surface_range,eta[1]+surface_range]
-    internal_surface_contours = [contour + eta[1] for contour in 
+    surface_limits = [[eta[0] - surface_range, eta[0] + surface_range], 
+                      [eta[1] - surface_range, eta[1] + surface_range]]
+    surface_contours = [[-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-0.5,
+                                    0.5,1,1.5,2,2.5,3,3.5,4,4.5,5],
+                        [contour + eta[1] for contour in 
                                     [-5,-4.5,-4,-3.5,-3,-2.5,-2,-1.5,-1,-0.5,
-                                     0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]]
-    internal_surface_ticks = [tick + eta[1] for tick in (-5,-4,-3,-2,-1,0,1,2,3,4,5)]
-    internal_surface_labels = [str(value) for value in internal_surface_ticks]
-    internal_speed_limits = [0.0,speed_range]
-    internal_speed_contours = numpy.linspace(0.0,speed_range,13)
-    internal_speed_ticks = [0,1,2,3]
-    internal_speed_labels = [str(value) for value in internal_speed_ticks]
-    
+                                     0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]]]
+    surface_ticks = [[-5,-4,-3,-2,-1,0,1,2,3,4,5], 
+                     [tick + eta[1] for tick in (-5,-4,-3,-2,-1,0,1,2,3,4,5)]]
+    surface_labels = [[str(value) for value in surface_ticks[0]],
+                      [str(value) for value in surface_ticks[1]]]
+    speed_limits = [[0.0, speed_range], [0.0,speed_range]]
+    speed_contours = [numpy.linspace(0.0,speed_range,13), 
+                      numpy.linspace(0.0,speed_range,13)]
+    speed_ticks = [[0,1,2,3], [0,1,2,3]]
+    speed_labels = [[str(value) for value in speed_ticks[0]], 
+                    [str(value) for value in speed_ticks[1]]]
+    depth_limits = [[0.0, 200.0], [0.0, 500]]
+
     wind_limits = [0,64]
-    # wind_limits = [-0.002,0.002]
     pressure_limits = [935,1013]
     friction_bounds = [0.01,0.04]
-    # vorticity_limits = [-1.e-2,1.e-2]
 
     # def pcolor_afteraxes(current_data):
     #     surge_afteraxes(current_data)
@@ -228,72 +224,95 @@ def setplot(plotdata):
     #   Plot specifications
     # ==========================================================================
     # ==========================================================================
+    axes_titles = ['Top', 'Bottom']
 
-    # ========================================================================
-    #  Entire Gulf - Surfaces
-    # ========================================================================
-    gulf_xlimits = [clawdata.lower[0],clawdata.upper[0]]
-    gulf_ylimits = [clawdata.lower[1],clawdata.upper[1]]
-    gulf_shrink = 0.9
     def gulf_after_axes(cd):
         if article:
             plt.subplots_adjust(left=0.08, bottom=0.04, right=0.97, top=0.96)
         else:
             plt.subplots_adjust(left=0.05, bottom=0.07, right=1.00, top=0.93)
         surge_afteraxes(cd)
-    
-    plotfigure = plotdata.new_plotfigure(name='Surface - Entire Domain', 
-                                         figno=fig_num_counter.get_counter())
-    plotfigure.kwargs = {'figsize':(14,4)}
-    plotfigure.show = True
 
-    #
-    #  Top Surface
-    #
-    # Set up for axes in this figure:
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.title = 'Top Surface'
-    plotaxes.axescmd = "subplot(1,2,1)"
-    plotaxes.scaled = True
-    plotaxes.xlimits = gulf_xlimits
-    plotaxes.ylimits = gulf_ylimits
-    plotaxes.afteraxes = gulf_after_axes
+    def latex_after_axes(cd):
+        if article:
+            plt.subplots_adjust(left=0.07, bottom=0.14, right=1.0, top=0.86)
+        # else:
+            # plt.subplots_adjust(right=1.0)
+        surge_afteraxes(cd)
 
-    multilayer.plot.add_surface_elevation(plotaxes, 1, plot_type='contourf',
-                                                  contours=top_surface_contours,
-                                                  shrink=gulf_shrink)
-    # surge.plot.add_surface_elevation(plotaxes, plot_type='contourf', 
-    #                                            contours=surface_contours,
-    #                                            shrink=gulf_shrink)
-    surge.plot.add_land(plotaxes,topo_min=-10.0,topo_max=5.0)
-    # surge.plot.add_bathy_contours(plotaxes)
-    if article:
-        plotaxes.plotitem_dict['surface_1'].add_colorbar = False
-    else:
-        add_custom_colorbar_ticks_to_axes(plotaxes, 'surface_1', top_surface_ticks, top_surface_labels)
-    plotaxes.plotitem_dict['surface_1'].amr_patchedges_show = [1,1,1,1,1,1,1,1]
+    # Plot settings dict
+    plot_settings = {"Gulf":{"limits":[[clawdata.lower[0], clawdata.upper[0]],
+                                       [clawdata.lower[1], clawdata.upper[1]]], 
+                             "shrink":0.9,
+                             "afteraxes":gulf_after_axes},
+                     "LaTex Shelf":{"limits":[[-97.5,-88.5], [27.5,30.5]], 
+                                    "shrink":1.0,
+                                    "afteraxes":latex_after_axes} }
 
-    #
-    #  Internal Surface
-    #
-    plotaxes = plotfigure.new_plotaxes()
-    plotaxes.title = "Internal Surface"
-    plotaxes.axescmd = 'subplot(1,2,2)'
-    plotaxes.scaled = True
-    plotaxes.xlimits = gulf_xlimits
-    plotaxes.ylimits = gulf_ylimits
-    plotaxes.afteraxes = gulf_after_axes
 
-    multilayer.plot.add_surface_elevation(plotaxes, 2, plot_type='contourf',
-                                            contours=internal_surface_contours,
-                                            shrink=gulf_shrink)
-    multilayer.plot.add_land(plotaxes)
-    multilayer.plot.add_surface_elevation(plotaxes, 2, plot_type='contour',)
-    if article:
-        plotaxes.plotitem_dict['surface_2'].add_colorbar = False
-    else:
-        add_custom_colorbar_ticks_to_axes(plotaxes, 'surface_2', internal_surface_ticks, internal_surface_labels)
-    plotaxes.plotitem_dict['surface_2'].amr_patchedges_show = [1,1,1,1,1,1,1,1]
+    # =====================
+    #  Surfaces and Depths
+    # =====================
+    for (region, settings) in plot_settings.iteritems():
+
+        surf_figure = plotdata.new_plotfigure(name='Surfaces - %s' % region,
+                                             figno=fig_num_counter.get_counter())
+        surf_figure.show = True
+        surf_figure.kwargs = {'figsize':(7 * multilayer_data.num_layers,4)}
+
+        depth_figure = plotdata.new_plotfigure(name='Depths - %s' % region,
+                                             figno=fig_num_counter.get_counter())
+        depth_figure.show = True
+        depth_figure.kwargs = {'figsize':(7 * multilayer_data.num_layers,4)}
+
+
+        for layer in xrange(1, multilayer_data.num_layers + 1):
+            
+            # Surfaces
+            plotaxes = surf_figure.new_plotaxes()
+            plotaxes.title = '%s Surface' % axes_titles[layer - 1]
+            plotaxes.axescmd = "subplot(1,%s,%s)" % (multilayer_data.num_layers,
+                                                     layer)
+            plotaxes.scaled = True
+            plotaxes.xlimits = settings['limits'][0]
+            plotaxes.ylimits = settings['limits'][1]
+            plotaxes.afteraxes = settings['afteraxes']
+
+            multilayer.plot.add_surface_elevation(plotaxes, layer, 
+                                            plot_type='contourf',
+                                            contours=surface_contours[layer - 1],
+                                            shrink=settings['shrink'])
+            multilayer.plot.add_land(plotaxes, layer, topo_min=-10.0,  
+                                                      topo_max=5.0)
+            if article:
+                plotaxes.plotitem_dict['surface_%s' % (layer)].add_colorbar = False
+            else:
+                add_custom_colorbar_ticks_to_axes(plotaxes, 
+                                                  'surface_%s' % layer, 
+                                                  surface_ticks[layer - 1], 
+                                                  surface_labels[layer - 1])
+
+            # Depths
+            plotaxes = depth_figure.new_plotaxes()
+            plotaxes.title = '%s Depth' % axes_titles[layer - 1]
+            plotaxes.axescmd = "subplot(1,%s,%s)" % (multilayer_data.num_layers,
+                                                     layer)
+            plotaxes.scaled = True
+            plotaxes.xlimits = settings['limits'][0]
+            plotaxes.ylimits = settings['limits'][1]
+            plotaxes.afteraxes = settings['afteraxes']
+
+            multilayer.plot.add_depth(plotaxes, layer, plot_type='pcolor',
+                                            shrink=settings['shrink'],
+                                            bounds=depth_limits[layer - 1])
+                                            
+            multilayer.plot.add_land(plotaxes, layer, topo_min=-10.0,  
+                                                      topo_max=5.0)
+            # if article:
+                # plotaxes.plotitem_dict['depth_%s' % (layer + 1)].add_colorbar = False
+            # else:
+                # add_custom_colorbar_ticks_to_axes(plotaxes, 'depth_%s' % (layer+1), depth_ticks[layer], depth_labels[layer])
+
 
 
     # #
