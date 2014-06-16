@@ -13,7 +13,6 @@ import datetime
 import numpy as np
 
 import clawpack.geoclaw.surge as surge
-import clawpack.geoclaw.surge as surge
 import clawpack.geoclaw.multilayer as multilayer
 
 # Need to adjust the date a bit due to weirdness with leap year (I think)
