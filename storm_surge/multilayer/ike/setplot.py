@@ -268,6 +268,11 @@ def setplot(plotdata):
         depth_figure.show = True
         depth_figure.kwargs = {'figsize':(7 * multilayer_data.num_layers,4)}
 
+        speed_figure = plotdata.new_plotfigure(name='Speed - %s' % region,
+                                             figno=fig_num_counter.get_counter())
+        speed_figure.show = True
+        speed_figure.kwargs = {'figsize':(7 * multilayer_data.num_layers,4)}
+
 
         for layer in xrange(1, multilayer_data.num_layers + 1):
             
@@ -315,35 +320,28 @@ def setplot(plotdata):
             # else:
                 # add_custom_colorbar_ticks_to_axes(plotaxes, 'depth_%s' % (layer+1), depth_ticks[layer], depth_labels[layer])
 
+            # Speed
+            plotaxes = speed_figure.new_plotaxes()
+            plotaxes.title = "%s Currents" % axes_titles[layer - 1]
+            plotaxes.axescmd = "subplot(1,%s,%s)" % (multilayer_data.num_layers,
+                                                     layer)
+            plotaxes.scaled = True
+            plotaxes.xlimits = settings['limits'][0]
+            plotaxes.ylimits = settings['limits'][1]
+            plotaxes.afteraxes = settings['afteraxes']
 
 
-    # #
-    # #  Water Speed
-    # #
-    # plotfigure = plotdata.new_plotfigure(name='Currents - Entire Domain',  
-    #                                      figno=fig_num_counter.get_counter())
-    # plotfigure.show = True
+            multilayer.add_speed(plotaxes, layer, plot_type='contourf', 
+                                               contours=speed_contours[layer-1], 
+                                               shrink=settings['shrink'])
+            if article:
+                plotaxes.plotitem_dict['speed%s' % (layer)].add_colorbar = False
+            else:
+                add_custom_colorbar_ticks_to_axes(plotaxes, 'speed_%s' % layer, 
+                                                  speed_ticks[layer-1],
+                                                  speed_labels[layer-1])
 
-    # # Set up for axes in this figure:
-    # plotaxes = plotfigure.new_plotaxes()
-    # plotaxes.title = 'Currents'
-    # plotaxes.scaled = True
-    # plotaxes.xlimits = gulf_xlimits
-    # plotaxes.ylimits = gulf_ylimits
-    # plotaxes.afteraxes = gulf_after_axes
-
-    # # Speed
-    # surge.add_speed(plotaxes, plot_type='contourf', 
-    #                                contours=speed_contours, 
-    #                                shrink=gulf_shrink)
-    # if article:
-    #     plotaxes.plotitem_dict['speed'].add_colorbar = False
-    # else:
-    #     add_custom_colorbar_ticks_to_axes(plotaxes, 'speed', speed_ticks, speed_labels)
-
-    # # Land
-    # surge.add_land(plotaxes)
-    # surge.add_bathy_contours(plotaxes)    
+            multilayer.add_land(plotaxes, layer)
 
     # #
     # # Friction field
