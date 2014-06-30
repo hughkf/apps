@@ -12,8 +12,8 @@ import datetime
 
 import numpy as np
 
-import clawpack.geoclaw.surge as surge
-import clawpack.geoclaw.multilayer as multilayer
+import clawpack.geoclaw.surge.data as surge
+import clawpack.geoclaw.multilayer.data as multilayer
 
 # Need to adjust the date a bit due to weirdness with leap year (I think)
 ike_landfall = datetime.datetime(2008,9,13 - 1,7) - datetime.datetime(2008,1,1,0)
@@ -47,9 +47,9 @@ def setrun(claw_pkg='geoclaw'):
     #------------------------------------------------------------------
     # Problem-specific parameters to be written to setprob.data:
     #------------------------------------------------------------------
-    rundata.add_data(surge.data.SurgeData(),'stormdata')
+    rundata.add_data(surge.SurgeData(),'stormdata')
     set_storm(rundata)
-    rundata.add_data(multilayer.data.MultilayerData(),'multilayer_data')
+    rundata.add_data(multilayer.MultilayerData(),'multilayer_data')
     set_multilayer(rundata)
     
     #probdata = rundata.new_UserData(name='probdata',fname='setprob.data')
@@ -126,10 +126,9 @@ def setrun(claw_pkg='geoclaw'):
 
     clawdata.output_style = 1
 
+    clawdata.tfinal = days2seconds(ike_landfall.days + 0.75) + ike_landfall.seconds
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
-        # clawdata.tfinal = days2seconds(date2days('2008091400'))
-        clawdata.tfinal = days2seconds(ike_landfall.days + 0.75) + ike_landfall.seconds
         recurrence = 24
         clawdata.num_output_times = int((clawdata.tfinal - clawdata.t0) 
                                             * recurrence / (60**2 * 24))
@@ -142,13 +141,13 @@ def setrun(claw_pkg='geoclaw'):
         clawdata.output_times = [0.5, 1.0]
 
     elif clawdata.output_style == 3:
-        # Output every iout timesteps with a total of ntot time steps:
+        # Output every output_step_interval timesteps with a total of total_steps time steps:
         clawdata.output_step_interval = 1
-        clawdata.total_steps = 1
+        clawdata.total_steps = 10
         clawdata.output_t0 = True
         
 
-    clawdata.output_format = 'ascii'      # 'ascii' or 'netcdf' 
+    clawdata.output_format = 'binary'      # 'ascii' or 'netcdf' 
     clawdata.output_q_components = 'all'   # could be list such as [True,True]
     clawdata.output_aux_components = 'all'
     clawdata.output_aux_onlyonce = False    # output aux arrays only at t0
@@ -419,7 +418,7 @@ def setrun(claw_pkg='geoclaw'):
     # GeoClaw specific parameters:
     #------------------------------------------------------------------
     rundata = setgeo(rundata)
-    rundata.add_data(surge.data.FrictionData(),'frictiondata')
+    rundata.add_data(surge.FrictionData(),'frictiondata')
     set_friction(rundata)
 
     return rundata
@@ -579,6 +578,7 @@ def set_multilayer(rundata):
     data.num_layers = 2
     data.rho = [1025.0, 1028.0]
     data.eta = [0.0, -200.0]
+    # data.eta = [0.0, -50000.0]
 
     # Algorithm parameters
     data.eigen_method = 2
