@@ -124,7 +124,7 @@ def setrun(claw_pkg='geoclaw'):
     # Note that the time integration stops after the final output time.
     # The solution at initial time t0 is always written in addition.
 
-    clawdata.output_style = 1
+    clawdata.output_style = 3
 
     clawdata.tfinal = days2seconds(ike_landfall.days + 0.75) + ike_landfall.seconds
     if clawdata.output_style==1:
@@ -143,7 +143,7 @@ def setrun(claw_pkg='geoclaw'):
     elif clawdata.output_style == 3:
         # Output every output_step_interval timesteps with a total of total_steps time steps:
         clawdata.output_step_interval = 1
-        clawdata.total_steps = 10
+        clawdata.total_steps = 40
         clawdata.output_t0 = True
         
 
@@ -577,7 +577,7 @@ def set_multilayer(rundata):
     # Physical parameters
     data.num_layers = 2
     data.rho = [1025.0, 1028.0]
-    data.eta = [0.0, -200.0]
+    data.eta = [0.0, -500.0]
     # data.eta = [0.0, -50000.0]
 
     # Algorithm parameters
