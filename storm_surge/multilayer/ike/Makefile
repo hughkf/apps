@@ -72,9 +72,8 @@ MODULES = \
  $(GEOLIB)/stommel_storm_module.f90 \
  $(GEOLIB)/storm_module.f90 \
  $(GEOLIB)/friction_module.f90 \
- $(GEOLIB)/multilayer/multilayer_module.f90 \
- $(GEOLIB)/multilayer/qinit_module.f90 \
- $(CLAW)/riemann/src/multilayer_eigen_module.f90
+ $(GEOLIB)/qinit_module.f90 \
+ $(GEOLIB)/multilayer/multilayer_module.f90
 
 SOURCES = \
   $(GEOLIB)/multilayer/setprob.f90 \
