@@ -79,8 +79,9 @@ def setrun(claw_pkg='geoclaw'):
     clawdata.lower[1] = 8.0       # south latitude
     clawdata.upper[1] = 32.0      # north latitude
 
-    # Number of grid cells:
-    degree_factor = 4 # (0.25º,0.25º) ~ (25237.5 m, 27693.2 m) resolution
+    # # Number of grid cells:
+    # degree_factor = 4 # (0.25º,0.25º) ~ (25237.5 m, 27693.2 m) resolution
+    degree_factor = 16 # (0.25º,0.25º) ~ (25237.5 m, 27693.2 m) resolution
     clawdata.num_cells[0] = int(clawdata.upper[0] - clawdata.lower[0]) * degree_factor
     clawdata.num_cells[1] = int(clawdata.upper[1] - clawdata.lower[1]) * degree_factor
 
@@ -103,8 +104,8 @@ def setrun(claw_pkg='geoclaw'):
     # -------------
     # Initial time:
     # -------------
-    clawdata.t0 = days2seconds(ike_landfall.days - 3) + ike_landfall.seconds
-    # clawdata.t0 = days2seconds(ike_landfall.days - 1) + ike_landfall.seconds
+    # clawdata.t0 = days2seconds(ike_landfall.days - 3) + ike_landfall.seconds
+    clawdata.t0 = days2seconds(ike_landfall.days - 0.5) + ike_landfall.seconds
 
     # Restart from checkpoint file of a previous run?
     # Note: If restarting, you must also change the Makefile to set:
@@ -124,7 +125,7 @@ def setrun(claw_pkg='geoclaw'):
     # Note that the time integration stops after the final output time.
     # The solution at initial time t0 is always written in addition.
 
-    clawdata.output_style = 3
+    clawdata.output_style = 1
 
     clawdata.tfinal = days2seconds(ike_landfall.days + 0.75) + ike_landfall.seconds
     if clawdata.output_style==1:
@@ -143,7 +144,7 @@ def setrun(claw_pkg='geoclaw'):
     elif clawdata.output_style == 3:
         # Output every output_step_interval timesteps with a total of total_steps time steps:
         clawdata.output_step_interval = 1
-        clawdata.total_steps = 40
+        clawdata.total_steps = 400
         clawdata.output_t0 = True
         
 
@@ -188,7 +189,7 @@ def setrun(claw_pkg='geoclaw'):
     # clawdata.cfl_max = 0.5
 
     # Maximum number of time steps to allow between output times:
-    clawdata.steps_max = 5000
+    clawdata.steps_max = 100000
 
 
 
@@ -198,7 +199,7 @@ def setrun(claw_pkg='geoclaw'):
     # ------------------
 
     # Order of accuracy:  1 => Godunov,  2 => Lax-Wendroff plus limiters
-    clawdata.order = 1
+    clawdata.order = 2
     
     # Use dimensional splitting? (not yet available for AMR)
     clawdata.dimensional_split = 'unsplit'
@@ -207,7 +208,7 @@ def setrun(claw_pkg='geoclaw'):
     #  0 or 'none'      ==> donor cell (only normal solver used)
     #  1 or 'increment' ==> corner transport of waves
     #  2 or 'all'       ==> corner transport of 2nd order corrections too
-    clawdata.transverse_waves = 1
+    clawdata.transverse_waves = 2
 
     # Number of waves in the Riemann solution:
     clawdata.num_waves = 6
@@ -528,7 +529,7 @@ def set_storm(rundata):
     # Source term controls - These are currently not respected
     data.wind_forcing = True
     data.drag_law = 1
-    data.pressure_forcing = True
+    data.pressure_forcing = False
     
     # Source term algorithm parameters
     # data.wind_tolerance = 1e-4
@@ -557,15 +558,17 @@ def set_friction(rundata):
 
     # Region based friction
     # Entire domain
+    eta_lower = rundata.multilayer_data.eta[1]
     data.friction_regions.append([rundata.clawdata.lower, 
                                   rundata.clawdata.upper,
-                                  [np.infty,0.0,-np.infty],
-                                  [0.030, 0.022]])
+                                  [np.infty,0.0,eta_lower,-np.infty],
+                                  [0.030, 0.022, 0.1]])
 
     # La-Tex Shelf
     data.friction_regions.append([(-98, 25.25), (-90, 30),
                                   [np.infty,-10.0,-200.0,-np.infty],
                                   [0.030, 0.012, 0.022]])
+
 
     return data
 
@@ -576,9 +579,11 @@ def set_multilayer(rundata):
 
     # Physical parameters
     data.num_layers = 2
-    data.rho = [1025.0, 1028.0]
-    data.eta = [0.0, -500.0]
-    # data.eta = [0.0, -50000.0]
+    # data.rho = [1025.0, 1028.0]
+    data.rho = [1025.0, 1025.0 / 0.95]
+    # data.eta = [0.0, -1000.0]
+    data.eta = [0.0, -200.0]
+    # data.dry_tolerance = [1e-3, 5.0]
 
     # Algorithm parameters
     data.eigen_method = 2
